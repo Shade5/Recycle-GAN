@@ -1,10 +1,9 @@
-import os
-
 from data.data_loader import CreateDataLoader
-from models.models import create_model
 from options.test_options import TestOptions
-from util import html
-from util.visualizer import Visualizer
+from models.recycle_gan_model import RecycleGANModel
+from tensorboardX import SummaryWriter
+from util.util import tensor2im
+import torch
 
 opt = TestOptions().parse()
 opt.nThreads = 1  # test code only supports nThreads = 1
@@ -14,20 +13,21 @@ opt.no_flip = True  # no flip
 
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
-model = create_model(opt)
-visualizer = Visualizer(opt)
+model = RecycleGANModel()
+model.initialize(opt)
+model.netG_A.eval()
+writer = SummaryWriter('tbx/videotest')
 # create website
-web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
-webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.which_epoch))
 # test
+real_A_vid = []
+fake_B_vid = []
 for i, data in enumerate(dataset):
-	if i >= opt.how_many:
+	if i == 3:
 		break
-	model.set_input(data)
-	model.test()
-	visuals = model.get_current_visuals()
-	img_path = model.get_image_paths()
-	print('%04d: process image... %s' % (i, img_path))
-	visualizer.save_images(webpage, visuals, img_path)
+	fakeB = model.netG_A(data['A'].cuda())
+	real_A_vid.append(tensor2im(data['A']))
+	fake_B_vid.append(tensor2im(fakeB))
 
-webpage.save()
+writer.add_video('A/real_A', torch.stack(real_A_vid, dim=0).unsqueeze(0).permute(0, 2, 1, 3, 4), 0)
+writer.add_video('A/fake_B', torch.stack(fake_B_vid, dim=0).unsqueeze(0).permute(0, 2, 1, 3, 4), 0)
+

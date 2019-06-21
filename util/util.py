@@ -13,11 +13,9 @@ from PIL import Image
 # Converts a Tensor into a Numpy array
 # |imtype|: the desired type of the converted numpy array
 def tensor2im(image_tensor, imtype=np.uint8):
-	image_numpy = image_tensor[0].cpu().float().numpy()
-	if image_numpy.shape[0] == 1:
-		image_numpy = np.tile(image_numpy, (3, 1, 1))
-	image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
-	return image_numpy.astype(imtype)
+	image_numpy = image_tensor[0].detach().cpu()
+	image_numpy = image_numpy*0.5 + 0.5
+	return image_numpy
 
 
 def diagnose_network(net, name='network'):
