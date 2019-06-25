@@ -19,7 +19,7 @@ class Visualizer:
 		self.opt = opt
 		self.saved = False
 
-		self.writer = SummaryWriter('tbx/test8')
+		self.writer = SummaryWriter('tbx/' + self.name)
 
 		self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
 		with open(self.log_name, "a") as log_file:
